@@ -191,18 +191,18 @@ namespace HibiPlaza
         {
             for (var i = 0; i < 3; i++)
             {
-                var x = 20f + i * 5f;
-                var imported = Model("CafeSet", "Cafe Set " + i, parent, new Vector3(x, 0f, -9f), null, Quaternion.Euler(0f, i * 12f, 0f), Vector3.one * 0.74f);
-                if (imported != null)
-                {
-                    continue;
-                }
-                var table = Part(PrimitiveType.Cylinder, "Cafe Table", parent, new Vector3(x, 0.9f, -9f), new Vector3(2.3f, 0.12f, 2.3f), new Color(0.45f, 0.23f, 0.10f), false);
-                Part(PrimitiveType.Cylinder, "Table Leg", parent, new Vector3(x, 0.43f, -9f), new Vector3(0.25f, 0.85f, 0.25f), new Color(0.18f, 0.20f, 0.22f), false);
-                Part(PrimitiveType.Cylinder, "Umbrella Pole", parent, new Vector3(x, 2.2f, -9f), new Vector3(0.12f, 4.4f, 0.12f), new Color(0.22f, 0.22f, 0.22f), false);
-                var umbrella = Part(PrimitiveType.Cylinder, "Cafe Umbrella", parent, new Vector3(x, 4.25f, -9f), new Vector3(5.1f, 0.12f, 5.1f),
+                var root = new GameObject("Kenney Cafe Set " + i).transform;
+                root.SetParent(parent, false);
+                root.localPosition = new Vector3(18f + i * 6f, 0f, -9f);
+                root.localRotation = Quaternion.Euler(0f, i * 9f, 0f);
+
+                ExternalModel("Furniture/tableRound", "Cafe Table", root, Vector3.zero, Quaternion.identity, Vector3.one * 0.28f);
+                ExternalModel("Furniture/chairRounded", "Cafe Chair L", root, new Vector3(-1.65f, 0f, 0f), Quaternion.Euler(0f, 90f, 0f), Vector3.one * 0.28f);
+                ExternalModel("Furniture/chairRounded", "Cafe Chair R", root, new Vector3(1.65f, 0f, 0f), Quaternion.Euler(0f, -90f, 0f), Vector3.one * 0.28f);
+                ExternalModel("Furniture/chairRounded", "Cafe Chair Back", root, new Vector3(0f, 0f, 1.65f), Quaternion.Euler(0f, 180f, 0f), Vector3.one * 0.28f);
+                Part(PrimitiveType.Cylinder, "Umbrella Pole", root, new Vector3(0f, 2.0f, 0f), new Vector3(0.11f, 4.0f, 0.11f), new Color(0.12f, 0.15f, 0.18f), false);
+                Part(PrimitiveType.Sphere, "Cafe Umbrella", root, new Vector3(0f, 3.75f, 0f), new Vector3(2.75f, 0.34f, 2.75f),
                     i % 2 == 0 ? new Color(0.96f, 0.39f, 0.29f) : new Color(0.98f, 0.72f, 0.23f), false);
-                umbrella.transform.localRotation = Quaternion.Euler(0f, i * 12f, 0f);
             }
         }
 
@@ -233,8 +233,11 @@ namespace HibiPlaza
 
             CreateBenchModel(parent, new Vector3(-9f, 0f, 11.5f), 25f);
             CreateBenchModel(parent, new Vector3(9f, 0f, 11.5f), -25f);
-            CreateBenchModel(parent, new Vector3(-15f, 0f, -7f), 90f);
-            CreateBenchModel(parent, new Vector3(15f, 0f, -7f), -90f);
+            CreateBenchModel(parent, new Vector3(-15f, 0f, -7f), 15f);
+            CreateBenchModel(parent, new Vector3(15f, 0f, -7f), -15f);
+
+            ExternalModel("Furniture/pottedPlant", "Kenney Potted Plant", parent, new Vector3(-12.5f, 0f, 17f), Quaternion.identity, Vector3.one * 0.48f);
+            ExternalModel("Furniture/pottedPlant", "Kenney Potted Plant", parent, new Vector3(12.5f, 0f, 17f), Quaternion.identity, Vector3.one * 0.48f);
 
             for (var i = 0; i < 8; i++)
             {
@@ -281,10 +284,31 @@ namespace HibiPlaza
 
         private static void CreateBenchModel(Transform parent, Vector3 position, float rotation)
         {
-            if (Model("Bench", "Bench", parent, position, null, Quaternion.Euler(0f, rotation, 0f), Vector3.one * 0.82f) == null)
+            if (ExternalModel("Furniture/bench", "Kenney Bench", parent, position, Quaternion.Euler(0f, rotation, 0f), new Vector3(0.78f, 0.42f, 0.55f)) == null)
             {
                 CreateBench(parent, position, rotation);
             }
+        }
+
+        private static GameObject ExternalModel(string resource, string name, Transform parent, Vector3 position,
+            Quaternion rotation, Vector3 scale)
+        {
+            var prefab = Resources.Load<GameObject>("ThirdParty/Kenney/" + resource);
+            if (prefab == null)
+            {
+                return null;
+            }
+            var instance = Object.Instantiate(prefab, parent, false);
+            instance.name = name;
+            instance.transform.localPosition = position;
+            instance.transform.localRotation = rotation;
+            instance.transform.localScale = scale;
+            foreach (var renderer in instance.GetComponentsInChildren<Renderer>(true))
+            {
+                renderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.On;
+                renderer.receiveShadows = true;
+            }
+            return instance;
         }
 
         private static GameObject Model(string resource, string name, Transform parent, Vector3 position, Color? tint = null,

@@ -90,24 +90,34 @@ namespace HibiPlaza.Editor
 
             var game = HibiGame.Instance;
             var avatars = UnityEngine.Object.FindObjectsByType<AvatarVisual>(FindObjectsSortMode.None);
+            var residents = UnityEngine.Object.FindObjectsByType<PlazaNpc>(FindObjectsSortMode.None);
+            var animatedResidents = 0;
+            foreach (var resident in residents)
+            {
+                if (resident.GetComponentInChildren<Animator>(true) != null)
+                {
+                    animatedResidents++;
+                }
+            }
             var camera = Camera.main;
             var hud = UnityEngine.Object.FindFirstObjectByType<PlazaHud>();
             var fountain = GameObject.Find("Central Fountain");
             var cafeShop = GameObject.Find("CAFE Shop");
+            var kenneyBench = GameObject.Find("Kenney Bench");
             var avatarParts = game?.LocalAvatar == null ? 0 : game.LocalAvatar.GetComponentsInChildren<Renderer>(true).Length;
             var fountainParts = fountain == null ? 0 : fountain.GetComponentsInChildren<Renderer>(true).Length;
-            if (game == null || game.LocalAvatar == null || avatars.Length < 5 || camera == null || hud == null || fountain == null)
+            if (game == null || game.LocalAvatar == null || avatars.Length < 1 || residents.Length < PlazaNpc.ResidentCount || animatedResidents < PlazaNpc.ResidentCount || camera == null || hud == null || fountain == null)
             {
-                FailSmoke($"Missing runtime objects: game={game != null}, local={game?.LocalAvatar != null}, avatars={avatars.Length}, camera={camera != null}, hud={hud != null}, fountain={fountain != null}");
+                FailSmoke($"Missing runtime objects: game={game != null}, local={game?.LocalAvatar != null}, avatars={avatars.Length}, residents={residents.Length}, animatedResidents={animatedResidents}, camera={camera != null}, hud={hud != null}, fountain={fountain != null}");
                 return;
             }
-            if (avatarParts < 20 || fountainParts < 10 || cafeShop == null)
+            if (avatarParts < 20 || fountainParts < 10 || cafeShop == null || kenneyBench == null)
             {
-                FailSmoke($"Detailed assets were not loaded: avatarParts={avatarParts}, fountainParts={fountainParts}, cafeShop={cafeShop != null}");
+                FailSmoke($"Detailed assets were not loaded: avatarParts={avatarParts}, fountainParts={fountainParts}, cafeShop={cafeShop != null}, kenneyBench={kenneyBench != null}");
                 return;
             }
 
-            Debug.Log($"HIBI_PLAZA_SMOKE_OK avatars={avatars.Length} avatarParts={avatarParts} fountainParts={fountainParts} local={game.LocalAvatar.DisplayName} camera={camera.name}");
+            Debug.Log($"HIBI_PLAZA_SMOKE_OK avatars={avatars.Length} residents={residents.Length} animatedResidents={animatedResidents} avatarParts={avatarParts} fountainParts={fountainParts} local={game.LocalAvatar.DisplayName} camera={camera.name}");
             EditorPrefs.DeleteKey(SmokeKey);
             EditorApplication.update -= SmokeUpdate;
             EditorApplication.Exit(0);
@@ -138,7 +148,7 @@ namespace HibiPlaza.Editor
 
         private static void ConfigureModels()
         {
-            var modelGuids = AssetDatabase.FindAssets("t:Model", new[] { "Assets/HibiPlaza/Resources/Models" });
+            var modelGuids = AssetDatabase.FindAssets("t:Model", new[] { "Assets/HibiPlaza/Resources" });
             foreach (var guid in modelGuids)
             {
                 var path = AssetDatabase.GUIDToAssetPath(guid);
@@ -146,15 +156,62 @@ namespace HibiPlaza.Editor
                 {
                     continue;
                 }
-                if (importer.bakeAxisConversion && !importer.importAnimation && !importer.importCameras && !importer.importLights)
+                var isKenneyCharacter = path.Contains("Kenney/MiniCharacters", StringComparison.Ordinal);
+                if (importer.bakeAxisConversion
+                    && importer.importAnimation == isKenneyCharacter
+                    && !importer.importCameras
+                    && !importer.importLights)
                 {
                     continue;
                 }
                 importer.bakeAxisConversion = true;
-                importer.importAnimation = false;
+                importer.importAnimation = isKenneyCharacter;
+                if (isKenneyCharacter)
+                {
+                    importer.animationType = ModelImporterAnimationType.Generic;
+                }
                 importer.importCameras = false;
                 importer.importLights = false;
                 importer.SaveAndReimport();
+            }
+        }
+
+        public static void InspectThirdPartyAssets()
+        {
+            var resources = new[]
+            {
+                "ThirdParty/Kenney/MiniCharacters/character-female-a",
+                "ThirdParty/Kenney/Furniture/bench",
+                "ThirdParty/Kenney/Furniture/chairRounded",
+                "ThirdParty/Kenney/Furniture/tableRound"
+            };
+            foreach (var resource in resources)
+            {
+                var prefab = Resources.Load<GameObject>(resource);
+                if (prefab == null)
+                {
+                    Debug.LogError("HIBI_ASSET_INSPECT missing=" + resource);
+                    continue;
+                }
+                var instance = UnityEngine.Object.Instantiate(prefab);
+                var renderers = instance.GetComponentsInChildren<Renderer>(true);
+                var bounds = renderers.Length > 0 ? renderers[0].bounds : new Bounds(Vector3.zero, Vector3.zero);
+                for (var i = 1; i < renderers.Length; i++)
+                {
+                    bounds.Encapsulate(renderers[i].bounds);
+                }
+                var clips = Resources.LoadAll<AnimationClip>(resource);
+                Debug.Log($"HIBI_ASSET_INSPECT resource={resource} renderers={renderers.Length} size={bounds.size} clips={clips.Length}");
+                if (clips.Length > 0)
+                {
+                    var clipNames = new string[clips.Length];
+                    for (var i = 0; i < clips.Length; i++)
+                    {
+                        clipNames[i] = clips[i].name;
+                    }
+                    Debug.Log("HIBI_ASSET_CLIPS " + string.Join(",", clipNames));
+                }
+                UnityEngine.Object.DestroyImmediate(instance);
             }
         }
 
