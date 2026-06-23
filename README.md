@@ -8,8 +8,9 @@ Hibi Plaza is an original 2.5D social virtual world built with Unity. Create a c
 
 ## Current Features
 
-- Avatar creator with skin, hair, hairstyle, top, and bottom choices
-- A stylized plaza with a fountain, cafe, shops, gardens, and seating
+- Blender-built modular chibi avatars with detailed faces, layered hair, clothing, and shoes
+- Avatar creator with skin, hair, four hairstyles, top, and bottom choices
+- A stylized plaza with modeled fountain, shops, cafe furniture, trees, lamps, benches, and flower planters
 - Click-to-walk and WASD movement
 - Realtime multiplayer position and appearance sync
 - Shared plaza chat with speech bubbles
@@ -18,6 +19,8 @@ Hibi Plaza is an original 2.5D social virtual world built with Unity. Create a c
 - Responsive WebGL presentation with a custom loading screen
 
 ![Two visitors chatting in the plaza](Documentation/Screenshots/multiplayer.png)
+
+![Modeled cafe and room storefronts](Documentation/Screenshots/plaza-shops.png)
 
 ## Controls
 
@@ -31,6 +34,8 @@ Hibi Plaza is an original 2.5D social virtual world built with Unity. Create a c
 ## Project Layout
 
 - `Assets/HibiPlaza` contains the Unity runtime, editor setup, shaders, scene, and artwork.
+- `ArtSource/Blender` contains the editable asset library.
+- `Tools/Blender` contains the deterministic asset-generation script.
 - `Assets/WebGLTemplates/HibiPlaza` contains the custom WebGL shell.
 - `Server` contains the small Node.js WebSocket service and integration test.
 - `Deployment` contains the systemd and nginx production configuration.
@@ -39,6 +44,8 @@ Hibi Plaza is an original 2.5D social virtual world built with Unity. Create a c
 ## Development
 
 Open the project with Unity `6000.0.77f1`. The editor menu under **Hibi Plaza** can configure the project, run the smoke test, and create the WebGL build.
+
+The 3D library was created with Blender `5.1.2`. Running `Tools/Blender/generate_hibi_assets.py` in Blender background mode regenerates the avatar and eight optimized FBX asset groups plus a visual preview.
 
 The realtime server requires Node.js 22 or newer:
 

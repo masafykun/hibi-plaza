@@ -31,6 +31,7 @@ namespace HibiPlaza.Editor
         {
             Directory.CreateDirectory("Assets/HibiPlaza/Scenes");
             ConfigureTitleArt();
+            ConfigureModels();
             ConfigurePlayer();
             CreateMainScene();
             AssetDatabase.SaveAssets();
@@ -92,13 +93,21 @@ namespace HibiPlaza.Editor
             var camera = Camera.main;
             var hud = UnityEngine.Object.FindFirstObjectByType<PlazaHud>();
             var fountain = GameObject.Find("Central Fountain");
+            var cafeShop = GameObject.Find("CAFE Shop");
+            var avatarParts = game?.LocalAvatar == null ? 0 : game.LocalAvatar.GetComponentsInChildren<Renderer>(true).Length;
+            var fountainParts = fountain == null ? 0 : fountain.GetComponentsInChildren<Renderer>(true).Length;
             if (game == null || game.LocalAvatar == null || avatars.Length < 5 || camera == null || hud == null || fountain == null)
             {
                 FailSmoke($"Missing runtime objects: game={game != null}, local={game?.LocalAvatar != null}, avatars={avatars.Length}, camera={camera != null}, hud={hud != null}, fountain={fountain != null}");
                 return;
             }
+            if (avatarParts < 20 || fountainParts < 10 || cafeShop == null)
+            {
+                FailSmoke($"Detailed assets were not loaded: avatarParts={avatarParts}, fountainParts={fountainParts}, cafeShop={cafeShop != null}");
+                return;
+            }
 
-            Debug.Log($"HIBI_PLAZA_SMOKE_OK avatars={avatars.Length} local={game.LocalAvatar.DisplayName} camera={camera.name}");
+            Debug.Log($"HIBI_PLAZA_SMOKE_OK avatars={avatars.Length} avatarParts={avatarParts} fountainParts={fountainParts} local={game.LocalAvatar.DisplayName} camera={camera.name}");
             EditorPrefs.DeleteKey(SmokeKey);
             EditorApplication.update -= SmokeUpdate;
             EditorApplication.Exit(0);
@@ -125,6 +134,28 @@ namespace HibiPlaza.Editor
             importer.textureCompression = TextureImporterCompression.CompressedHQ;
             importer.maxTextureSize = 2048;
             importer.SaveAndReimport();
+        }
+
+        private static void ConfigureModels()
+        {
+            var modelGuids = AssetDatabase.FindAssets("t:Model", new[] { "Assets/HibiPlaza/Resources/Models" });
+            foreach (var guid in modelGuids)
+            {
+                var path = AssetDatabase.GUIDToAssetPath(guid);
+                if (AssetImporter.GetAtPath(path) is not ModelImporter importer)
+                {
+                    continue;
+                }
+                if (importer.bakeAxisConversion && !importer.importAnimation && !importer.importCameras && !importer.importLights)
+                {
+                    continue;
+                }
+                importer.bakeAxisConversion = true;
+                importer.importAnimation = false;
+                importer.importCameras = false;
+                importer.importLights = false;
+                importer.SaveAndReimport();
+            }
         }
 
         private static void ConfigurePlayer()

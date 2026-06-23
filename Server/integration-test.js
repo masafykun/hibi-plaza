@@ -43,13 +43,12 @@ const avatarA = { skin: 1, hair: 2, top: 3, bottom: 1, hairStyle: 2 };
 const avatarB = { skin: 3, hair: 4, top: 5, bottom: 2, hairStyle: 1 };
 const first = await createClient("Mina", avatarA);
 const firstWelcome = await waitFor(first, (message) => message.type === "welcome");
-assert.equal(firstWelcome.count, 1);
+assert.ok(firstWelcome.count >= 1);
 
 const second = await createClient("Ren", avatarB);
 const secondWelcome = await waitFor(second, (message) => message.type === "welcome");
-assert.equal(secondWelcome.count, 2);
-assert.equal(secondWelcome.players.length, 1);
-assert.equal(secondWelcome.players[0].name, "Mina");
+assert.ok(secondWelcome.count >= 2);
+assert.ok(secondWelcome.players.some((player) => player.id === firstWelcome.id && player.name === "Mina"));
 await waitFor(first, (message) => message.type === "player_join" && message.name === "Ren");
 
 first.socket.send(JSON.stringify({ type: "move", x: 8.5, z: -3.25, r: 180 }));

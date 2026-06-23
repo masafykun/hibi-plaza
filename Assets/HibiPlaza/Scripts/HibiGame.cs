@@ -46,6 +46,9 @@ namespace HibiPlaza
             Instance = this;
             Application.targetFrameRate = 60;
             QualitySettings.vSyncCount = 1;
+            QualitySettings.antiAliasing = 4;
+            QualitySettings.shadowDistance = 70f;
+            QualitySettings.shadowResolution = ShadowResolution.High;
             EnsureEventSystem();
             CurrentAvatar = LoadAvatar();
             ShowLanding();
@@ -108,7 +111,7 @@ namespace HibiPlaza
             State = HibiState.Customizing;
             sceneRoot = new GameObject("Avatar Studio");
             BuildAvatarStudio(sceneRoot.transform);
-            previewAvatar = AvatarVisual.Create(CurrentAvatar, sceneRoot.transform, Vector3.zero);
+            previewAvatar = AvatarVisual.Create(CurrentAvatar, sceneRoot.transform, new Vector3(-1.25f, 0f, 0f));
             previewAvatar.SetLabelsVisible(false);
 
             activeCanvas = UiKit.CreateCanvas("Avatar Creator", 25);
@@ -345,10 +348,10 @@ namespace HibiPlaza
             var cameraObject = new GameObject("Main Camera", typeof(Camera), typeof(AudioListener));
             cameraObject.tag = "MainCamera";
             cameraObject.transform.SetParent(root, false);
-            cameraObject.transform.position = new Vector3(0f, 2.55f, -7.2f);
-            cameraObject.transform.rotation = Quaternion.LookRotation(new Vector3(0f, 1.55f, 0f) - cameraObject.transform.position);
+            cameraObject.transform.position = new Vector3(-1.25f, 2.75f, -8.8f);
+            cameraObject.transform.rotation = Quaternion.LookRotation(new Vector3(-1.25f, 1.72f, 0f) - cameraObject.transform.position);
             var camera = cameraObject.GetComponent<Camera>();
-            camera.fieldOfView = 31f;
+            camera.fieldOfView = 34f;
             camera.backgroundColor = new Color(0.68f, 0.86f, 0.89f);
 
             var key = new GameObject("Studio Key", typeof(Light));
@@ -356,7 +359,7 @@ namespace HibiPlaza
             key.transform.rotation = Quaternion.Euler(35f, -35f, 0f);
             var keyLight = key.GetComponent<Light>();
             keyLight.type = LightType.Directional;
-            keyLight.intensity = 1.25f;
+            keyLight.intensity = 1.0f;
             keyLight.color = new Color(1f, 0.82f, 0.68f);
             keyLight.shadows = LightShadows.Soft;
 
@@ -366,7 +369,7 @@ namespace HibiPlaza
             var fillLight = fill.GetComponent<Light>();
             fillLight.type = LightType.Point;
             fillLight.range = 12f;
-            fillLight.intensity = 2.1f;
+            fillLight.intensity = 1.35f;
             fillLight.color = new Color(0.50f, 0.76f, 1f);
         }
 
