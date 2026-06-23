@@ -1,0 +1,16 @@
+{
+  "name": "hibi-plaza-server",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Realtime room server for Hibi Plaza",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "check": "node --check server.js",
+    "test": "node integration-test.js"
+  },
+  "dependencies": {
+    "ws": "^8.18.3"
+  }
+}
