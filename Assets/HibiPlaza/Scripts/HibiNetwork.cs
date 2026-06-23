@@ -43,6 +43,7 @@ namespace HibiPlaza
         private AvatarVisual localAvatar;
         private bool manualClose;
         private bool fallbackStarted;
+        private int connectionGeneration;
 
         public string LocalId { get; private set; }
         public bool Connected => socket != null && socket.State == WebSocketState.Open;
@@ -63,56 +64,106 @@ namespace HibiPlaza
         {
             var url = ResolveServerUrl();
             HibiGame.Instance.SetConnectionStatus("CONNECTING", 1);
-            socket = new WebSocket(url);
-            socket.OnOpen += () =>
+            const int maxAttempts = 2;
+            for (var attempt = 1; attempt <= maxAttempts && !manualClose; attempt++)
             {
-                HibiGame.Instance.SetConnectionStatus("LIVE", 1);
-                Send(new NetMessage
+                var attemptNumber = attempt;
+                var generation = ++connectionGeneration;
+                var candidate = new WebSocket(url);
+                var opened = false;
+                var connectionResult = new TaskCompletionSource<bool>();
+                socket = candidate;
+                candidate.OnOpen += () =>
                 {
-                    type = "join",
-                    name = avatar.displayName,
-                    avatar = JsonUtility.ToJson(avatar),
-                    x = localAvatar.transform.position.x,
-                    z = localAvatar.transform.position.z,
-                    r = localAvatar.transform.eulerAngles.y
-                });
-            };
-            socket.OnMessage += bytes =>
-            {
-                var json = Encoding.UTF8.GetString(bytes);
-                HandleMessage(json);
-            };
-            socket.OnError += error =>
-            {
-                Debug.LogWarning("Hibi network error: " + error);
-                StartFallback();
-            };
-            socket.OnClose += code =>
-            {
-                if (!manualClose)
-                {
-                    StartFallback();
-                }
-            };
+                    if (generation != connectionGeneration || manualClose)
+                    {
+                        return;
+                    }
 
-            try
-            {
-                var connectTask = socket.Connect();
-                var completed = await Task.WhenAny(connectTask, Task.Delay(6500));
-                if (completed != connectTask)
+                    opened = true;
+                    connectionResult.TrySetResult(true);
+                    HibiGame.Instance.SetConnectionStatus("LIVE", 1);
+                    Send(new NetMessage
+                    {
+                        type = "join",
+                        name = avatar.displayName,
+                        avatar = JsonUtility.ToJson(avatar),
+                        x = localAvatar.transform.position.x,
+                        z = localAvatar.transform.position.z,
+                        r = localAvatar.transform.eulerAngles.y
+                    });
+                };
+                candidate.OnMessage += bytes =>
                 {
-                    StartFallback();
+                    if (generation == connectionGeneration)
+                    {
+                        HandleMessage(Encoding.UTF8.GetString(bytes));
+                    }
+                };
+                candidate.OnError += error =>
+                {
+                    if (generation == connectionGeneration)
+                    {
+                        Debug.LogWarning("Hibi network attempt " + attemptNumber + " failed: " + error);
+                        connectionResult.TrySetResult(false);
+                    }
+                };
+                candidate.OnClose += code =>
+                {
+                    if (generation != connectionGeneration || manualClose)
+                    {
+                        return;
+                    }
+
+                    if (opened)
+                    {
+                        StartFallback();
+                    }
+                    else
+                    {
+                        connectionResult.TrySetResult(false);
+                    }
+                };
+
+                try
+                {
+                    await candidate.Connect();
+                    var completed = await Task.WhenAny(connectionResult.Task, Task.Delay(10000));
+                    if (completed != connectionResult.Task)
+                    {
+                        Debug.LogWarning("Hibi network attempt " + attemptNumber + " timed out.");
+                    }
                 }
-                else
+                catch (Exception exception)
                 {
-                    await connectTask;
+                    Debug.LogWarning("Unable to connect to Hibi server: " + exception.Message);
+                }
+
+                if (opened || (connectionResult.Task.IsCompleted && connectionResult.Task.Result))
+                {
+                    return;
+                }
+
+                try
+                {
+                    if (candidate.State == WebSocketState.Connecting || candidate.State == WebSocketState.Open)
+                    {
+                        await candidate.Close();
+                    }
+                }
+                catch
+                {
+                    // A failed connection may already be closed by the browser.
+                }
+
+                if (attempt < maxAttempts)
+                {
+                    HibiGame.Instance.SetConnectionStatus("RETRYING", 1);
+                    await Task.Delay(900);
                 }
             }
-            catch (Exception exception)
-            {
-                Debug.LogWarning("Unable to connect to Hibi server: " + exception.Message);
-                StartFallback();
-            }
+
+            StartFallback();
         }
 
         private void Update()

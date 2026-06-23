@@ -180,6 +180,7 @@ namespace HibiPlaza
             LocalAvatar = AvatarVisual.Create(CurrentAvatar, sceneRoot.transform, PlazaWorld.SpawnPoints[0]);
             LocalAvatar.gameObject.AddComponent<AvatarMotor>();
             camera.Follow(LocalAvatar.transform);
+            PlazaNpc.SpawnResidents(sceneRoot.transform);
 
             activeCanvas = UiKit.CreateCanvas("Social HUD", 20);
             hud = activeCanvas.gameObject.AddComponent<PlazaHud>();
@@ -193,8 +194,7 @@ namespace HibiPlaza
             }
             else
             {
-                SetConnectionStatus("OFFLINE PREVIEW", 5);
-                SpawnDemoResidents();
+                SetConnectionStatus("OFFLINE PREVIEW", 1);
             }
         }
 
@@ -206,7 +206,6 @@ namespace HibiPlaza
         public void NetworkUnavailable()
         {
             SetConnectionStatus("OFFLINE PREVIEW", 1);
-            SpawnDemoResidents();
         }
 
         public void AddChat(string name, string message, string playerId)
@@ -471,7 +470,7 @@ namespace HibiPlaza
             UiKit.Place(brand.rectTransform, 0.025f, 0f, 0.30f, 1f);
             connection = UiKit.Text(top.rectTransform, "CONNECTING", 16, new Color(1f, 0.72f, 0.26f), TextAnchor.MiddleCenter, FontStyle.Bold);
             UiKit.Place(connection.rectTransform, 0.43f, 0f, 0.60f, 1f);
-            online = UiKit.Text(top.rectTransform, "1 ONLINE", 17, Color.white, TextAnchor.MiddleRight, FontStyle.Bold);
+            online = UiKit.Text(top.rectTransform, "1 ONLINE  +  4 NPC", 17, Color.white, TextAnchor.MiddleRight, FontStyle.Bold);
             UiKit.Place(online.rectTransform, 0.76f, 0f, 0.97f, 1f);
 
             var chatPanel = UiKit.Image(root, "Chat Panel", new Color(0.035f, 0.09f, 0.13f, 0.84f));
@@ -530,7 +529,7 @@ namespace HibiPlaza
         {
             connection.text = state;
             connection.color = state == "LIVE" ? new Color(0.34f, 0.86f, 0.56f) : new Color(1f, 0.72f, 0.26f);
-            online.text = count + (count == 1 ? " ONLINE" : " ONLINE");
+            online.text = count + " ONLINE  +  " + PlazaNpc.ResidentCount + " NPC";
         }
 
         private void AddEmote(RectTransform parent, string label, string emote, float minX, float maxX, Color color)
@@ -577,7 +576,7 @@ namespace HibiPlaza
             }
             direction.Normalize();
             transform.position += direction * 1.9f * Time.deltaTime;
-            transform.rotation = Quaternion.Slerp(transform.rotation, Quaternion.LookRotation(direction), Time.deltaTime * 8f);
+            transform.rotation = Quaternion.Slerp(transform.rotation, Quaternion.LookRotation(-direction), Time.deltaTime * 8f);
             visual.SetMoving(true);
         }
 

@@ -11,16 +11,18 @@ Hibi Plaza is an original 2.5D social virtual world built with Unity. Create a c
 - Blender-built modular chibi avatars with detailed faces, layered hair, clothing, and shoes
 - Avatar creator with skin, hair, four hairstyles, top, and bottom choices
 - A stylized plaza with modeled fountain, shops, cafe furniture, trees, lamps, benches, and flower planters
+- Four animated local NPC residents with independent patrol routes and speech bubbles
+- CC0 Kenney Mini Characters and Furniture Kit assets integrated for residents and plaza furniture
 - Click-to-walk and WASD movement
 - Realtime multiplayer position and appearance sync
 - Shared plaza chat with speech bubbles
 - Wave, cheer, and dance emotes
-- Offline preview residents when the network is unavailable
+- Graceful offline preview when the realtime server is unavailable
 - Responsive WebGL presentation with a custom loading screen
 
-![Two visitors chatting in the plaza](Documentation/Screenshots/multiplayer.png)
+![Two visitors and animated residents in the plaza](Documentation/Screenshots/multiplayer.png)
 
-![Modeled cafe and room storefronts](Documentation/Screenshots/plaza-shops.png)
+![Kenney cafe furniture and a patrolling resident](Documentation/Screenshots/plaza-shops.png)
 
 ## Controls
 
@@ -34,6 +36,7 @@ Hibi Plaza is an original 2.5D social virtual world built with Unity. Create a c
 ## Project Layout
 
 - `Assets/HibiPlaza` contains the Unity runtime, editor setup, shaders, scene, and artwork.
+- `Assets/HibiPlaza/Resources/ThirdParty/Kenney` contains the selected CC0 runtime models.
 - `ArtSource/Blender` contains the editable asset library.
 - `Tools/Blender` contains the deterministic asset-generation script.
 - `Assets/WebGLTemplates/HibiPlaza` contains the custom WebGL shell.
@@ -65,3 +68,4 @@ This repository is a playable vertical slice and a foundation for a larger virtu
 ## License
 
 Code is available under the [MIT License](LICENSE). The Hibi Plaza title artwork is included for use with this project.
+Third-party asset details are listed in [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).

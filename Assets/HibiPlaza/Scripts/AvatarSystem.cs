@@ -499,7 +499,7 @@ namespace HibiPlaza
             if (moving)
             {
                 transform.position += direction * 4.5f * Time.deltaTime;
-                transform.rotation = Quaternion.Slerp(transform.rotation, Quaternion.LookRotation(direction), Time.deltaTime * 11f);
+                transform.rotation = Quaternion.Slerp(transform.rotation, Quaternion.LookRotation(-direction), Time.deltaTime * 11f);
             }
 
             transform.position = new Vector3(
