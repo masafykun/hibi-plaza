@@ -9,12 +9,12 @@ namespace HibiPlaza
 
         public static readonly Vector3[] SpawnPoints =
         {
-            new Vector3(0f, 0f, -7f),
-            new Vector3(-4f, 0f, -4f),
-            new Vector3(4f, 0f, -3f),
-            new Vector3(-8f, 0f, 3f),
-            new Vector3(8f, 0f, 4f),
-            new Vector3(-2f, 0f, 8f)
+            new Vector3(0f, 0f, -4.5f),
+            new Vector3(-3f, 0f, 0f),
+            new Vector3(3f, 0f, 0.5f),
+            new Vector3(-5f, 0f, 4f),
+            new Vector3(5f, 0f, 4f),
+            new Vector3(0f, 0f, 8f)
         };
 
         public static SocialCamera Build(Transform parent)
@@ -73,7 +73,7 @@ namespace HibiPlaza
             var sun = sunObject.GetComponent<Light>();
             sun.type = LightType.Directional;
             sun.color = new Color(1f, 0.84f, 0.68f);
-            sun.intensity = 1.15f;
+            sun.intensity = 0.92f;
             sun.shadows = LightShadows.Soft;
             sun.shadowStrength = 0.68f;
             RenderSettings.sun = sun;
@@ -84,7 +84,7 @@ namespace HibiPlaza
             var fill = fillObject.GetComponent<Light>();
             fill.type = LightType.Directional;
             fill.color = new Color(0.44f, 0.68f, 0.92f);
-            fill.intensity = 0.32f;
+            fill.intensity = 0.22f;
         }
 
         private static void CreateGround(Transform parent)
@@ -109,6 +109,13 @@ namespace HibiPlaza
 
         private static void CreateFountain(Transform parent)
         {
+            var imported = Model("Fountain", "Central Fountain", parent, new Vector3(0f, 0f, 5.5f), null, Quaternion.identity, Vector3.one * 0.76f);
+            if (imported != null)
+            {
+                CreateFountainParticles(imported.transform);
+                return;
+            }
+
             var root = new GameObject("Central Fountain").transform;
             root.SetParent(parent, false);
             root.localPosition = new Vector3(0f, 0f, 5.5f);
@@ -146,14 +153,22 @@ namespace HibiPlaza
 
         private static void CreateShops(Transform parent)
         {
-            CreateShop(parent, new Vector3(-22f, 0f, 26f), new Color(0.94f, 0.50f, 0.52f), new Color(1f, 0.82f, 0.58f), "STYLE");
-            CreateShop(parent, new Vector3(-8f, 0f, 27f), new Color(0.37f, 0.72f, 0.68f), new Color(0.90f, 0.96f, 0.79f), "CAFE");
-            CreateShop(parent, new Vector3(8f, 0f, 27f), new Color(0.52f, 0.59f, 0.88f), new Color(0.91f, 0.84f, 1f), "ROOM");
-            CreateShop(parent, new Vector3(22f, 0f, 26f), new Color(0.96f, 0.68f, 0.30f), new Color(1f, 0.91f, 0.66f), "GOODS");
+            CreateShop(parent, new Vector3(-18.5f, 0f, 20.5f), new Color(0.94f, 0.50f, 0.52f), new Color(1f, 0.82f, 0.58f), "STYLE");
+            CreateShop(parent, new Vector3(-6.3f, 0f, 21f), new Color(0.37f, 0.72f, 0.68f), new Color(0.90f, 0.96f, 0.79f), "CAFE");
+            CreateShop(parent, new Vector3(6.3f, 0f, 21f), new Color(0.52f, 0.59f, 0.88f), new Color(0.91f, 0.84f, 1f), "ROOM");
+            CreateShop(parent, new Vector3(18.5f, 0f, 20.5f), new Color(0.96f, 0.68f, 0.30f), new Color(1f, 0.91f, 0.66f), "GOODS");
         }
 
         private static void CreateShop(Transform parent, Vector3 position, Color wall, Color awning, string sign)
         {
+            var imported = Model("Shop", sign + " Shop", parent, position, wall, Quaternion.identity, Vector3.one * 0.74f);
+            if (imported != null)
+            {
+                var importedSign = WorldLabel(parent, sign, position + new Vector3(0f, 5.45f, -2.42f), new Vector2(220f, 48f), Color.white);
+                importedSign.transform.localRotation = Quaternion.identity;
+                return;
+            }
+
             var root = new GameObject(sign + " Shop").transform;
             root.SetParent(parent, false);
             root.localPosition = position;
@@ -177,6 +192,11 @@ namespace HibiPlaza
             for (var i = 0; i < 3; i++)
             {
                 var x = 20f + i * 5f;
+                var imported = Model("CafeSet", "Cafe Set " + i, parent, new Vector3(x, 0f, -9f), null, Quaternion.Euler(0f, i * 12f, 0f), Vector3.one * 0.74f);
+                if (imported != null)
+                {
+                    continue;
+                }
                 var table = Part(PrimitiveType.Cylinder, "Cafe Table", parent, new Vector3(x, 0.9f, -9f), new Vector3(2.3f, 0.12f, 2.3f), new Color(0.45f, 0.23f, 0.10f), false);
                 Part(PrimitiveType.Cylinder, "Table Leg", parent, new Vector3(x, 0.43f, -9f), new Vector3(0.25f, 0.85f, 0.25f), new Color(0.18f, 0.20f, 0.22f), false);
                 Part(PrimitiveType.Cylinder, "Umbrella Pole", parent, new Vector3(x, 2.2f, -9f), new Vector3(0.12f, 4.4f, 0.12f), new Color(0.22f, 0.22f, 0.22f), false);
@@ -196,23 +216,34 @@ namespace HibiPlaza
             };
             foreach (var position in treePositions)
             {
-                CreateTree(parent, position);
+                if (Model("Tree", "Tree", parent, position) == null)
+                {
+                    CreateTree(parent, position);
+                }
             }
 
             for (var x = -24; x <= 24; x += 8)
             {
-                CreateLamp(parent, new Vector3(x, 0f, -17f));
+                var position = new Vector3(x, 0f, -17f);
+                if (Model("Lamp", "Lamp", parent, position) == null)
+                {
+                    CreateLamp(parent, position);
+                }
             }
 
-            CreateBench(parent, new Vector3(-9f, 0f, 11.5f), 25f);
-            CreateBench(parent, new Vector3(9f, 0f, 11.5f), -25f);
-            CreateBench(parent, new Vector3(-15f, 0f, -7f), 90f);
-            CreateBench(parent, new Vector3(15f, 0f, -7f), -90f);
+            CreateBenchModel(parent, new Vector3(-9f, 0f, 11.5f), 25f);
+            CreateBenchModel(parent, new Vector3(9f, 0f, 11.5f), -25f);
+            CreateBenchModel(parent, new Vector3(-15f, 0f, -7f), 90f);
+            CreateBenchModel(parent, new Vector3(15f, 0f, -7f), -90f);
 
             for (var i = 0; i < 8; i++)
             {
                 var angle = i / 8f * Mathf.PI * 2f;
                 var position = new Vector3(Mathf.Cos(angle) * 7.4f, 0f, 5.5f + Mathf.Sin(angle) * 7.4f);
+                if (Model("Planter", "Flower Planter", parent, position, null, Quaternion.Euler(0f, i * 28f, 0f), Vector3.one * 0.72f) != null)
+                {
+                    continue;
+                }
                 var planter = Part(PrimitiveType.Cylinder, "Flower Planter", parent, position + Vector3.up * 0.35f, new Vector3(1.35f, 0.45f, 1.35f), new Color(0.42f, 0.24f, 0.16f), false);
                 for (var flower = 0; flower < 5; flower++)
                 {
@@ -246,6 +277,55 @@ namespace HibiPlaza
             Part(PrimitiveType.Cube, "Bench Back", root, new Vector3(0f, 1.25f, 0.38f), new Vector3(3.3f, 0.85f, 0.18f), new Color(0.46f, 0.23f, 0.09f), false);
             Part(PrimitiveType.Cube, "Bench Legs", root, new Vector3(-1.15f, 0.30f, 0f), new Vector3(0.18f, 0.65f, 0.70f), new Color(0.12f, 0.14f, 0.16f), false);
             Part(PrimitiveType.Cube, "Bench Legs", root, new Vector3(1.15f, 0.30f, 0f), new Vector3(0.18f, 0.65f, 0.70f), new Color(0.12f, 0.14f, 0.16f), false);
+        }
+
+        private static void CreateBenchModel(Transform parent, Vector3 position, float rotation)
+        {
+            if (Model("Bench", "Bench", parent, position, null, Quaternion.Euler(0f, rotation, 0f), Vector3.one * 0.82f) == null)
+            {
+                CreateBench(parent, position, rotation);
+            }
+        }
+
+        private static GameObject Model(string resource, string name, Transform parent, Vector3 position, Color? tint = null,
+            Quaternion rotation = default, Vector3 scale = default)
+        {
+            var prefab = Resources.Load<GameObject>("Models/" + resource);
+            if (prefab == null)
+            {
+                return null;
+            }
+
+            var instance = Object.Instantiate(prefab, parent, false);
+            instance.name = name;
+            instance.transform.localPosition = position;
+            var placementRotation = rotation == default ? Quaternion.identity : rotation;
+            instance.transform.localRotation = placementRotation * Quaternion.Euler(90f, 0f, 0f);
+            instance.transform.localScale = scale == default ? Vector3.one : scale;
+            foreach (var renderer in instance.GetComponentsInChildren<Renderer>(true))
+            {
+                if (renderer.name.StartsWith("Water", System.StringComparison.Ordinal))
+                {
+                    renderer.sharedMaterial = HibiMaterials.Water;
+                }
+                else if (renderer.name.Contains("Glow", System.StringComparison.Ordinal))
+                {
+                    renderer.sharedMaterial = HibiMaterials.Get(new Color(1f, 0.67f, 0.18f), true);
+                }
+                else if (tint.HasValue && renderer.name.StartsWith("ShopTint", System.StringComparison.Ordinal))
+                {
+                    renderer.sharedMaterial = HibiMaterials.Get(tint.Value);
+                }
+                else
+                {
+                    var source = renderer.sharedMaterial;
+                    var color = source != null && source.HasProperty("_Color") ? source.color : Color.white;
+                    renderer.sharedMaterial = HibiMaterials.Get(color);
+                }
+                renderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.On;
+                renderer.receiveShadows = true;
+            }
+            return instance;
         }
 
         private static RectTransform WorldLabel(Transform parent, string value, Vector3 position, Vector2 size, Color color)
@@ -298,8 +378,8 @@ namespace HibiPlaza
             {
                 return;
             }
-            transform.position = target.position + new Vector3(0f, 15.5f, -14.5f);
-            transform.rotation = Quaternion.Euler(47f, 0f, 0f);
+            transform.position = target.position + new Vector3(0f, 12f, -16f);
+            transform.rotation = Quaternion.Euler(38f, 0f, 0f);
         }
 
         private void LateUpdate()
@@ -308,9 +388,9 @@ namespace HibiPlaza
             {
                 return;
             }
-            var desired = target.position + new Vector3(0f, 15.5f, -14.5f);
+            var desired = target.position + new Vector3(0f, 12f, -16f);
             transform.position = Vector3.SmoothDamp(transform.position, desired, ref velocity, 0.22f);
-            transform.rotation = Quaternion.Euler(47f, 0f, 0f);
+            transform.rotation = Quaternion.Euler(38f, 0f, 0f);
         }
     }
 

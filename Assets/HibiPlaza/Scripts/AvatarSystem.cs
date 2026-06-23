@@ -88,6 +88,7 @@ namespace HibiPlaza
         private float emoteUntil;
         private string emote;
         private bool moving;
+        private bool usesImportedModel;
 
         public string DisplayName => data?.displayName ?? "Guest";
 
@@ -97,9 +98,9 @@ namespace HibiPlaza
             root.transform.SetParent(parent, false);
             root.transform.position = position;
             var collider = root.GetComponent<CapsuleCollider>();
-            collider.center = new Vector3(0f, 1.15f, 0f);
-            collider.height = 2.3f;
-            collider.radius = 0.48f;
+            collider.center = new Vector3(0f, 1.62f, 0f);
+            collider.height = 3.18f;
+            collider.radius = 0.64f;
             var visual = root.GetComponent<AvatarVisual>();
             visual.Build(avatar.Copy());
             return visual;
@@ -127,7 +128,14 @@ namespace HibiPlaza
             {
                 nameText.text = data.displayName;
             }
-            RebuildHair(hair);
+            if (usesImportedModel)
+            {
+                ApplyHairStyle();
+            }
+            else
+            {
+                RebuildHair(hair);
+            }
         }
 
         public void SetMoving(bool value)
@@ -176,6 +184,28 @@ namespace HibiPlaza
         private void Build(AvatarData avatar)
         {
             data = avatar;
+            var model = Resources.Load<GameObject>("Models/HibiAvatar");
+            if (model != null)
+            {
+                bodyRoot = new GameObject("Body Motion").transform;
+                bodyRoot.SetParent(transform, false);
+                var instance = Instantiate(model, bodyRoot, false);
+                instance.name = "Body Model";
+                instance.transform.localRotation = Quaternion.Euler(90f, 0f, 0f);
+                leftArm = FindDeepChild(instance.transform, "ArmPivot_L");
+                rightArm = FindDeepChild(instance.transform, "ArmPivot_R");
+                usesImportedModel = leftArm != null && rightArm != null;
+                if (usesImportedModel)
+                {
+                    RestyleImportedModel(instance);
+                    Apply(data);
+                    CreateLabels();
+                    return;
+                }
+                Destroy(instance);
+                Destroy(bodyRoot.gameObject);
+            }
+
             bodyRoot = new GameObject("Body").transform;
             bodyRoot.SetParent(transform, false);
 
@@ -202,6 +232,48 @@ namespace HibiPlaza
             hairRoot.SetParent(bodyRoot, false);
             RebuildHair(AvatarPalette.Hair[Mathf.Abs(data.hair) % AvatarPalette.Hair.Length]);
             CreateLabels();
+        }
+
+        private void ApplyHairStyle()
+        {
+            var activeStyle = Mathf.Abs(data.hairStyle) % 4;
+            for (var i = 0; i < 4; i++)
+            {
+                var style = FindDeepChild(bodyRoot, "HairStyle_" + i);
+                if (style != null)
+                {
+                    style.gameObject.SetActive(i == activeStyle);
+                }
+            }
+        }
+
+        private static Transform FindDeepChild(Transform parent, string childName)
+        {
+            if (parent.name == childName)
+            {
+                return parent;
+            }
+            foreach (Transform child in parent)
+            {
+                var found = FindDeepChild(child, childName);
+                if (found != null)
+                {
+                    return found;
+                }
+            }
+            return null;
+        }
+
+        private static void RestyleImportedModel(GameObject model)
+        {
+            foreach (var renderer in model.GetComponentsInChildren<Renderer>(true))
+            {
+                var source = renderer.sharedMaterial;
+                var color = source != null && source.HasProperty("_Color") ? source.color : Color.white;
+                renderer.sharedMaterial = HibiMaterials.Get(color);
+                renderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.On;
+                renderer.receiveShadows = true;
+            }
         }
 
         private Transform Limb(string name, Vector3 position, Color color)
@@ -261,12 +333,13 @@ namespace HibiPlaza
 
         private void CreateLabels()
         {
-            var nameCanvas = WorldCanvas("Nameplate", new Vector3(0f, 3.35f, 0f), new Vector2(180f, 34f));
+            var labelHeight = usesImportedModel ? 3.78f : 3.35f;
+            var nameCanvas = WorldCanvas("Nameplate", new Vector3(0f, labelHeight, 0f), new Vector2(180f, 34f));
             nameText = UiKit.Text(nameCanvas, data.displayName, 19, Color.white, TextAnchor.MiddleCenter, FontStyle.Bold);
             UiKit.Stretch(nameText.rectTransform);
             nameCanvas.gameObject.AddComponent<WorldBillboard>();
 
-            var chatCanvas = WorldCanvas("Chat Bubble", new Vector3(0f, 4.02f, 0f), new Vector2(240f, 76f));
+            var chatCanvas = WorldCanvas("Chat Bubble", new Vector3(0f, labelHeight + 0.70f, 0f), new Vector2(240f, 76f));
             var background = UiKit.Image(chatCanvas, "Bubble", new Color(1f, 1f, 1f, 0.96f));
             UiKit.Stretch(background.rectTransform);
             bubbleText = UiKit.Text(background.rectTransform, string.Empty, 17, new Color(0.10f, 0.13f, 0.16f), TextAnchor.MiddleCenter);
@@ -295,7 +368,7 @@ namespace HibiPlaza
 
         private void SetPartColor(string prefix, Color color)
         {
-            foreach (var renderer in GetComponentsInChildren<Renderer>())
+            foreach (var renderer in GetComponentsInChildren<Renderer>(true))
             {
                 if (renderer.name.StartsWith(prefix, StringComparison.Ordinal))
                 {
