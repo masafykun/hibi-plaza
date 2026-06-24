@@ -4,6 +4,13 @@ Hibi Plaza is an original 2.5D social virtual world built with Unity. Create a c
 
 **[Play Hibi Plaza in your browser](https://masafykun.github.io/hibi-plaza/)**
 
+## Playable Versions
+
+- [Version 01: Original Plaza](https://masafykun.github.io/hibi-plaza/versions/original/)
+- [Version 02: Blender Edition](https://masafykun.github.io/hibi-plaza/versions/blender/)
+- [Version 03: NPC Edition](https://masafykun.github.io/hibi-plaza/versions/npc/)
+- [Version Archive](https://masafykun.github.io/hibi-plaza/versions/)
+
 ![Hibi Plaza title screen](Documentation/Screenshots/title.png)
 
 ## Current Features
