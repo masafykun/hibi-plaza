@@ -10,14 +10,10 @@ Hibi Plaza は Unity で制作したオリジナルの 2.5D ソーシャル仮�
 ![Blender](https://img.shields.io/badge/Blender-5.1.2-F5792A?style=flat-square&logo=blender)
 ![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=flat-square)
 
-🔗 **[Live Demo](https://masafykun.github.io/hibi-plaza/)**
+🔗 **公開は 2026-10-19 に終了しました**(デモのサーバーを停止し、[GitHub Pages](https://masafykun.github.io/hibi-plaza/) は終了のお知らせにしています)。ビルド済みの WebGL は、コミット履歴(2026-10-18 以前)から取り出せます。
 
 ### プレイ可能なバージョン
 
-- [Version 01: Original Plaza](https://masafykun.github.io/hibi-plaza/versions/original/)
-- [Version 02: Blender Edition](https://masafykun.github.io/hibi-plaza/versions/blender/)
-- [Version 03: NPC Edition](https://masafykun.github.io/hibi-plaza/versions/npc/)
-- [Version Archive](https://masafykun.github.io/hibi-plaza/versions/)
 
 ---
 
@@ -102,7 +98,7 @@ npm test
 npm start
 ```
 
-ホスト版クライアントは `wss://hibi.160.251.234.247.nip.io/hibi` に接続します。サービスはメッセージ形式の検証、移動・チャット頻度の制限、マークアップと制御文字の除去、送信されたリンクの削除を行います。
+(終了前のホスト版クライアントは `wss://hibi.160.251.234.247.nip.io/hibi` に接続していました。このサーバーは停止済みです。)サービスはメッセージ形式の検証、移動・チャット頻度の制限、マークアップと制御文字の除去、送信されたリンクの削除を行います。
 
 ---
 
